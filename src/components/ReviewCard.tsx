@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import * as A from '../lib/actions'
-import { fmtDate, fmtDateTime, fromLocalInput, inDaysAt9, nextSundayAt9, toLocalInput } from '../lib/format'
+import { fmtDate, fmtDateTime, fromLocalInput, inDaysAt9, nextWeeklyReview, toLocalInput } from '../lib/format'
 import { ITEM_TYPES, REVIEW_RESULTS, type Ref, type ReviewItem } from '../lib/types'
 import ScopeEditor from './ScopeEditor'
 
@@ -80,7 +80,7 @@ export default function ReviewCard({ item, onChanged }: Props) {
       {error && <p className="error">{error}</p>}
 
       <footer className="row actions">
-        <button className="primary" disabled={busy} onClick={() => decide(notes.trim() ? 'Update' : 'Maintain', nextSundayAt9())}>
+        <button className="primary" disabled={busy} onClick={() => decide(notes.trim() ? 'Update' : 'Maintain', nextWeeklyReview())}>
           Manter (próximo domingo)
         </button>
         <button disabled={busy} onClick={() => setShowLater(!showLater)}>Rever mais tarde…</button>
