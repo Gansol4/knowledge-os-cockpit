@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import Inbox from './Inbox'
 import Review from './Review'
+import Items from './Items'
 
-type Tab = 'inbox' | 'review'
+type Tab = 'inbox' | 'review' | 'items'
 
 export default function Shell({ email }: { email: string }) {
   const [tab, setTab] = useState<Tab>('inbox')
@@ -43,13 +44,14 @@ export default function Shell({ email }: { email: string }) {
         <button className={tab === 'review' ? 'active' : ''} onClick={() => setTab('review')}>
           Para rever {badge(counts.review)}
         </button>
+        <button className={tab === 'items' ? 'active' : ''} onClick={() => setTab('items')}>
+          Itens
+        </button>
       </nav>
 
-      {tab === 'inbox' ? (
-        <Inbox onCount={setInboxCount} />
-      ) : (
-        <Review onCount={setReviewCount} />
-      )}
+      {tab === 'inbox' && <Inbox onCount={setInboxCount} />}
+      {tab === 'review' && <Review onCount={setReviewCount} />}
+      {tab === 'items' && <Items />}
     </div>
   )
 }

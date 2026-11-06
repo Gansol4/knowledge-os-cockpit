@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import * as A from '../lib/actions'
 import { fmtDateTime, fmtEvent, fromLocalInput, toLocalInput } from '../lib/format'
-import { ITEM_TYPES, type InboxItem, type Ref, type Refs } from '../lib/types'
+import { ITEM_STATUSES, ITEM_TYPES, REVIEW_RESULTS, type InboxItem, type Ref, type Refs } from '../lib/types'
 import LinkEditor from './LinkEditor'
 import MentionResolver from './MentionResolver'
 import ScopeEditor from './ScopeEditor'
 
-type Props = { item: InboxItem; refs: Refs; onChanged: () => void }
+// mode "inbox": validar (Confirmar / Ignorar). mode "item": consulta e edição a qualquer momento (estado, histórico).
+type Props = { item: InboxItem; refs: Refs; onChanged: () => void; mode?: 'inbox' | 'item'; startEditing?: boolean }
 
 // Campo de data editável (prazo, próxima revisão)
 function DateField(props: {
@@ -35,8 +36,8 @@ function DateField(props: {
   )
 }
 
-export default function InboxCard({ item, refs, onChanged }: Props) {
-  const [editing, setEditing] = useState(false)
+export default function InboxCard({ item, refs, onChanged, mode = 'inbox', startEditing = false }: Props) {
+  const [editing, setEditing] = useState(startEditing)
   const [title, setTitle] = useState(item.title)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -167,15 +168,52 @@ export default function InboxCard({ item, refs, onChanged }: Props) {
         />
       ))}
 
+      {mode === 'item' && item.reviews && item.reviews.length > 0 && (
+        <div className="links">
+          <span className="links-label">Histórico de revisões</span>
+          {[...item.reviews]
+            .sort((a, b) => b.review_date.localeCompare(a.review_date))
+            .map((h, i) => (
+              <div key={i} className="small">
+                <b>{fmtDateTime(h.review_date)}</b> · {REVIEW_RESULTS[h.result] ?? h.result}
+                {h.notes ? ` — ${h.notes}` : ''}
+              </div>
+            ))}
+        </div>
+      )}
+
       {error && <p className="error">{error}</p>}
 
-      <footer className="row actions">
-        <button className="primary" disabled={busy} onClick={() => act(() => A.confirmItem(item.id))}>
-          ✓ Confirmar{pending.length ? ` (${pending.length} por resolver)` : ''}
-        </button>
-        <button disabled={busy} onClick={() => setEditing(!editing)}>{editing ? 'Fechar edição' : 'Editar'}</button>
-        <button className="ghost" disabled={busy} onClick={() => act(() => A.ignoreItem(item.id))}>Ignorar</button>
-      </footer>
+      {mode === 'inbox' ? (
+        <footer className="row actions">
+          <button className="primary" disabled={busy} onClick={() => act(() => A.confirmItem(item.id))}>
+            ✓ Confirmar{pending.length ? ` (${pending.length} por resolver)` : ''}
+          </button>
+          <button disabled={busy} onClick={() => setEditing(!editing)}>{editing ? 'Fechar edição' : 'Editar'}</button>
+          <button className="ghost" disabled={busy} onClick={() => act(() => A.ignoreItem(item.id))}>Ignorar</button>
+        </footer>
+      ) : (
+        <footer className="row actions">
+          <label className="inline">
+            Estado
+            <select
+              value={item.status}
+              disabled={busy}
+              onChange={(e) => act(() => A.updateItem(item.id, { status: e.target.value }))}
+            >
+              {Object.entries(ITEM_STATUSES).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </label>
+          <button disabled={busy} onClick={() => setEditing(!editing)}>{editing ? 'Fechar edição' : 'Editar'}</button>
+          {item.classification_status === 'PendingValidation' && (
+            <button className="primary" disabled={busy} onClick={() => act(() => A.confirmItem(item.id))}>
+              ✓ Validar
+            </button>
+          )}
+        </footer>
+      )}
     </article>
   )
 }

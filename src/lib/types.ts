@@ -32,6 +32,14 @@ export type InboxItem = {
   event_items: { events: { id: string; title: string; start_at: string } | null }[]
   item_mentions: Mention[]
   item_scopes: Scope[]
+  reviews?: ReviewEntry[]
+}
+
+export const ITEM_STATUSES: Record<string, string> = {
+  Open: 'Aberto',
+  InProgress: 'Em curso',
+  Completed: 'Concluído',
+  Archived: 'Arquivado',
 }
 
 export type Scope = {

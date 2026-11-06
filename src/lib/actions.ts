@@ -27,7 +27,7 @@ export function ignoreItem(id: string) {
 
 export function updateItem(
   id: string,
-  fields: Partial<Pick<InboxItem, 'title' | 'item_type' | 'due_at' | 'next_review_at'>>,
+  fields: Partial<Pick<InboxItem, 'title' | 'item_type' | 'due_at' | 'next_review_at' | 'status'>>,
 ) {
   return run(supabase.from('items').update({ ...fields, updated_at: now() }).eq('id', id))
 }
