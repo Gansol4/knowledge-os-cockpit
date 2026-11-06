@@ -37,6 +37,16 @@ export function fromLocalInput(v: string): string | null {
   return v ? new Date(v).toISOString() : null
 }
 
+// Próxima revisão semanal: domingo às 09:00 (hora local).
+// Se hoje é domingo, salta para o domingo seguinte (a revisão de hoje está a ser feita agora).
+export function nextSundayAt9(): string {
+  const d = new Date()
+  const add = d.getDay() === 0 ? 7 : 7 - d.getDay()
+  d.setDate(d.getDate() + add)
+  d.setHours(9, 0, 0, 0)
+  return d.toISOString()
+}
+
 // Daqui a N dias, às 09:00 (hora local)
 export function inDaysAt9(days: number): string {
   const d = new Date()
