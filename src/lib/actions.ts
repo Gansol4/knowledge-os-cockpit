@@ -25,7 +25,10 @@ export function ignoreItem(id: string) {
   )
 }
 
-export function updateItem(id: string, fields: Partial<Pick<InboxItem, 'title' | 'item_type' | 'due_at'>>) {
+export function updateItem(
+  id: string,
+  fields: Partial<Pick<InboxItem, 'title' | 'item_type' | 'due_at' | 'next_review_at'>>,
+) {
   return run(supabase.from('items').update({ ...fields, updated_at: now() }).eq('id', id))
 }
 
@@ -64,6 +67,53 @@ export async function addNewTag(itemId: string, name: string) {
     tagId = (created as { id: string } | undefined)?.id
   }
   if (tagId) await addLink('tag', itemId, tagId)
+}
+
+// ---------- Âmbito ("em todos os treinos até…") ----------
+
+export function addScope(
+  itemId: string,
+  scope: { event_type: string | null; group_id: string | null; valid_until: string | null },
+) {
+  return run(supabase.from('item_scopes').insert({ item_id: itemId, ...scope, source: 'user' }))
+}
+
+export function removeScope(scopeId: string) {
+  return run(supabase.from('item_scopes').delete().eq('id', scopeId))
+}
+
+// ---------- Revisões ----------
+
+export type ReviewResult = 'Maintain' | 'Update' | 'Complete' | 'Archive' | 'ReviewLater'
+
+// Regista a decisão no histórico (tabela reviews) e atualiza o estado atual do item.
+export async function recordReview(itemId: string, result: ReviewResult, notes: string, nextReviewAt: string | null) {
+  const closing = result === 'Complete' || result === 'Archive'
+  const next = closing ? null : nextReviewAt
+
+  await run(
+    supabase.from('reviews').insert({
+      item_id: itemId,
+      review_type: 'Custom',
+      review_date: now(),
+      result,
+      notes: notes.trim() || null,
+      next_review_at: next,
+    }),
+  )
+
+  const fields: Record<string, unknown> = { next_review_at: next, updated_at: now() }
+  if (result === 'Complete') fields.status = 'Completed'
+  if (result === 'Archive') fields.status = 'Archived'
+  await run(supabase.from('items').update(fields).eq('id', itemId))
+
+  // Item fechado: as regras de âmbito deixam de se aplicar a partir de agora
+  if (closing) {
+    const t = now()
+    await run(
+      supabase.from('item_scopes').update({ valid_until: t }).eq('item_id', itemId).or(`valid_until.is.null,valid_until.gt.${t}`),
+    )
+  }
 }
 
 // ---------- Menções por resolver ----------

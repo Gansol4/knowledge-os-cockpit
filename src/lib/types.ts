@@ -23,6 +23,7 @@ export type InboxItem = {
   source: string
   due_at: string | null
   occurred_at: string | null
+  next_review_at: string | null
   created_at: string
   ai_interpretation: { confidence?: string; confidence_reason?: string } | null
   item_people: { people: Ref | null }[]
@@ -30,6 +31,39 @@ export type InboxItem = {
   item_tags: { tags: Ref | null }[]
   event_items: { events: { id: string; title: string; start_at: string } | null }[]
   item_mentions: Mention[]
+  item_scopes: Scope[]
+}
+
+export type Scope = {
+  id: string
+  event_type: string | null
+  group_id: string | null
+  valid_until: string | null
+  groups: Ref | null
+}
+
+export type ReviewEntry = { result: string; notes: string | null; review_date: string }
+
+export type ReviewItem = Omit<InboxItem, 'item_mentions' | 'event_items'> & { reviews: ReviewEntry[] }
+
+export const EVENT_TYPES: Record<string, string> = {
+  Any: 'Todos os eventos',
+  Training: 'Treinos',
+  Game: 'Jogos',
+  Meeting: 'Reuniões',
+  Class: 'Aulas',
+  Review: 'Revisões',
+  Travel: 'Viagens',
+  Personal: 'Pessoais',
+  Other: 'Outros',
+}
+
+export const REVIEW_RESULTS: Record<string, string> = {
+  Maintain: 'Manter',
+  Update: 'Atualizado',
+  Complete: 'Concluído',
+  Archive: 'Arquivado',
+  ReviewLater: 'Rever mais tarde',
 }
 
 export type Refs = {

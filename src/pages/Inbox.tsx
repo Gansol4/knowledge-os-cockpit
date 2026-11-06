@@ -5,7 +5,8 @@ import InboxCard from '../components/InboxCard'
 
 const ITEM_SELECT = `
   id, title, description, item_type, status, classification_status, category, priority, source,
-  due_at, occurred_at, created_at, ai_interpretation,
+  due_at, occurred_at, next_review_at, created_at, ai_interpretation,
+  item_scopes ( id, event_type, group_id, valid_until, groups ( id, name ) ),
   item_people ( people ( id, name ) ),
   item_groups ( groups ( id, name ) ),
   item_tags ( tags ( id, name ) ),
@@ -38,7 +39,7 @@ async function loadRefs(): Promise<Refs> {
   } as Refs
 }
 
-export default function Inbox({ email }: { email: string }) {
+export default function Inbox({ onCount }: { onCount: (n: number) => void }) {
   const [items, setItems] = useState<InboxItem[] | null>(null)
   const [refs, setRefs] = useState<Refs | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -55,37 +56,33 @@ export default function Inbox({ email }: { email: string }) {
         loadRefs(),
       ])
       if (error) throw new Error(error.message)
-      setItems((data ?? []) as unknown as InboxItem[])
+      const list = (data ?? []) as unknown as InboxItem[]
+      setItems(list)
       setRefs(r)
+      onCount(list.length)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     }
-  }, [])
+  }, [onCount])
 
   useEffect(() => {
     load()
   }, [load])
 
   return (
-    <div className="page">
-      <header className="top">
-        <div>
-          <h1>Inbox de Revisão</h1>
-          <p className="muted small">
-            {items ? `${items.length} ${items.length === 1 ? 'item' : 'itens'} por rever` : 'A carregar…'}
-          </p>
-        </div>
-        <div className="row">
-          <button onClick={load}>↻</button>
-          <button className="ghost" title={email} onClick={() => supabase.auth.signOut()}>Sair</button>
-        </div>
-      </header>
+    <>
+      <div className="top">
+        <p className="muted small">
+          {items ? `${items.length} ${items.length === 1 ? 'item' : 'itens'} por validar` : 'A carregar…'}
+        </p>
+        <button onClick={load}>↻</button>
+      </div>
 
       {error && <p className="error">{error}</p>}
 
-      {items && items.length === 0 && <p className="empty">Tudo revisto. 🎉</p>}
+      {items && items.length === 0 && <p className="empty">Tudo validado. 🎉</p>}
 
       {items && refs && items.map((item) => <InboxCard key={item.id} item={item} refs={refs} onChanged={load} />)}
-    </div>
+    </>
   )
 }

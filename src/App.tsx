@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { configOk, supabase } from './lib/supabase'
 import Login from './pages/Login'
-import Inbox from './pages/Inbox'
+import Shell from './pages/Shell'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -26,5 +26,5 @@ export default function App() {
   }
   if (!ready) return <div className="page muted">A carregar…</div>
   if (!session) return <Login />
-  return <Inbox email={session.user.email ?? ''} />
+  return <Shell email={session.user.email ?? ''} />
 }

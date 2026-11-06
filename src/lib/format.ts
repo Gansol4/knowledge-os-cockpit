@@ -14,6 +14,37 @@ const dateOnlyUtc = new Intl.DateTimeFormat('pt-PT', {
   month: '2-digit',
 })
 
+const dateOnly = new Intl.DateTimeFormat('pt-PT', {
+  timeZone: 'Europe/Lisbon',
+  weekday: 'short',
+  day: '2-digit',
+  month: '2-digit',
+})
+
+export function fmtDate(iso: string | null): string {
+  return iso ? dateOnly.format(new Date(iso)) : ''
+}
+
+// Valor para <input type="datetime-local"> (hora local do dispositivo)
+export function toLocalInput(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+export function fromLocalInput(v: string): string | null {
+  return v ? new Date(v).toISOString() : null
+}
+
+// Daqui a N dias, às 09:00 (hora local)
+export function inDaysAt9(days: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  d.setHours(9, 0, 0, 0)
+  return d.toISOString()
+}
+
 export function fmtDateTime(iso: string | null): string {
   return iso ? dateTime.format(new Date(iso)) : ''
 }

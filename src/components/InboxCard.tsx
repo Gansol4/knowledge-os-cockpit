@@ -1,17 +1,38 @@
 import { useState } from 'react'
 import * as A from '../lib/actions'
-import { fmtDateTime, fmtEvent } from '../lib/format'
+import { fmtDateTime, fmtEvent, fromLocalInput, toLocalInput } from '../lib/format'
 import { ITEM_TYPES, type InboxItem, type Ref, type Refs } from '../lib/types'
 import LinkEditor from './LinkEditor'
 import MentionResolver from './MentionResolver'
+import ScopeEditor from './ScopeEditor'
 
 type Props = { item: InboxItem; refs: Refs; onChanged: () => void }
 
-function toLocalInput(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+// Campo de data editável (prazo, próxima revisão)
+function DateField(props: {
+  label: string
+  value: string | null
+  editing: boolean
+  onSave: (iso: string | null) => void
+}) {
+  if (!props.value && !props.editing) return null
+  return (
+    <div className="links">
+      <span className="links-label">{props.label}</span>
+      {props.editing ? (
+        <input
+          type="datetime-local"
+          defaultValue={toLocalInput(props.value)}
+          onBlur={(e) => {
+            const iso = fromLocalInput(e.target.value)
+            if (iso !== props.value) props.onSave(iso)
+          }}
+        />
+      ) : (
+        <span>{fmtDateTime(props.value)}</span>
+      )}
+    </div>
+  )
 }
 
 export default function InboxCard({ item, refs, onChanged }: Props) {
@@ -114,26 +135,26 @@ export default function InboxCard({ item, refs, onChanged }: Props) {
         onRemove={(id) => act(() => A.removeLink('event', item.id, id))}
       />
 
-      {(item.due_at || editing) && (
-        <div className="links">
-          <span className="links-label">Prazo</span>
-          {editing ? (
-            <div className="row">
-              <input
-                type="datetime-local"
-                defaultValue={toLocalInput(item.due_at)}
-                onBlur={(e) => {
-                  const v = e.target.value
-                  const iso = v ? new Date(v).toISOString() : null
-                  if (iso !== item.due_at) act(() => A.updateItem(item.id, { due_at: iso }))
-                }}
-              />
-            </div>
-          ) : (
-            <span>{fmtDateTime(item.due_at)}</span>
-          )}
-        </div>
-      )}
+      <ScopeEditor
+        scopes={item.item_scopes}
+        groups={refs.groups}
+        editing={editing}
+        onAdd={(s) => act(() => A.addScope(item.id, s))}
+        onRemove={(id) => act(() => A.removeScope(id))}
+      />
+
+      <DateField
+        label="Prazo"
+        value={item.due_at}
+        editing={editing}
+        onSave={(iso) => act(() => A.updateItem(item.id, { due_at: iso }))}
+      />
+      <DateField
+        label="Próxima revisão"
+        value={item.next_review_at}
+        editing={editing}
+        onSave={(iso) => act(() => A.updateItem(item.id, { next_review_at: iso }))}
+      />
 
       {pending.map((m) => (
         <MentionResolver
