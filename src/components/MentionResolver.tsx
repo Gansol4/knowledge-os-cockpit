@@ -6,7 +6,7 @@ type Props = {
   mention: Mention
   refs: Refs
   onLink: (entityId: string) => void
-  onCreatePerson: (p: { name: string; person_type: string; main_context_id: string }) => void
+  onCreatePerson: (p: { name: string; person_type: string; main_context_id: string; group_id: string }) => void
   onIgnore: () => void
 }
 
@@ -23,6 +23,7 @@ export default function MentionResolver({ mention, refs, onLink, onCreatePerson,
     name: titleCase(mention.mention_text),
     person_type: 'Athlete',
     main_context_id: defaultContext,
+    group_id: '',
   })
 
   const options =
@@ -87,6 +88,15 @@ export default function MentionResolver({ mention, refs, onLink, onCreatePerson,
               >
                 {refs.contexts.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Grupo
+              <select value={person.group_id} onChange={(e) => setPerson({ ...person, group_id: e.target.value })}>
+                <option value="">Nenhum</option>
+                {refs.groups.map((g) => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
                 ))}
               </select>
             </label>

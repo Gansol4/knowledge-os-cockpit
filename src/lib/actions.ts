@@ -147,19 +147,25 @@ export async function resolveMention(m: Mention, itemId: string, entityId: strin
 export async function createPersonFromMention(
   m: Mention,
   itemId: string,
-  person: { name: string; person_type: string; main_context_id: string },
+  person: { name: string; person_type: string; main_context_id: string; group_id?: string },
 ) {
   const text = m.mention_text.trim()
   const aliases = text.toLowerCase() !== person.name.trim().toLowerCase() ? [text] : []
   const created = await run(
     supabase
       .from('people')
-      .insert({ name: person.name.trim(), person_type: person.person_type, main_context_id: person.main_context_id, aliases })
+      .insert({
+        name: person.name.trim(),
+        person_type: person.person_type,
+        main_context_id: person.main_context_id,
+        aliases,
+      })
       .select('id')
       .single(),
   )
   const id = (created as { id: string } | undefined)?.id
   if (!id) throw new Error('Não foi possível criar a pessoa')
+  if (person.group_id) await run(supabase.from('group_people').insert({ group_id: person.group_id, person_id: id }))
   await addLink('person', itemId, id)
   await run(supabase.from('item_mentions').update({ status: 'resolved', resolved_entity_id: id }).eq('id', m.id))
 }
