@@ -50,6 +50,19 @@ export function nextWeeklyReview(): string {
   return d.toISOString()
 }
 
+// Fecho do dia (21:30, hora local) de uma data "AAAA-MM-DD"
+export function dailyReviewOf(day: string): string {
+  return new Date(`${day}T21:30:00`).toISOString()
+}
+
+// Data local "AAAA-MM-DD" daqui a N dias (para os campos <input type="date">)
+export function localDay(offsetDays = 0): string {
+  const d = new Date()
+  d.setDate(d.getDate() + offsetDays)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
 // Daqui a N dias, às 09:00 (hora local)
 export function inDaysAt9(days: number): string {
   const d = new Date()

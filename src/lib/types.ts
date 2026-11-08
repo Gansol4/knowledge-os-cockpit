@@ -24,6 +24,8 @@ export type InboxItem = {
   due_at: string | null
   occurred_at: string | null
   next_review_at: string | null
+  review_rule?: string
+  carry_overs?: number
   created_at: string
   ai_interpretation: { confidence?: string; confidence_reason?: string } | null
   item_people: { people: Ref | null }[]
@@ -52,7 +54,7 @@ export type Scope = {
 
 export type ReviewEntry = { result: string; notes: string | null; review_date: string }
 
-export type ReviewItem = Omit<InboxItem, 'item_mentions' | 'event_items'> & { reviews: ReviewEntry[] }
+export type ReviewItem = InboxItem & { reviews: ReviewEntry[] }
 
 export const EVENT_TYPES: Record<string, string> = {
   Any: 'Todos os eventos',

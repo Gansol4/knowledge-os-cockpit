@@ -141,7 +141,7 @@ export default function InboxCard({ item, refs, onChanged, mode = 'inbox', start
         groups={refs.groups}
         editing={editing}
         onAdd={(s) => act(() => A.addScope(item.id, s))}
-        onRemove={(id) => act(() => A.removeScope(id))}
+        onRemove={(id) => act(() => A.removeScope(id, item.id))}
       />
 
       <DateField

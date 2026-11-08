@@ -29,7 +29,20 @@ export function updateItem(
   id: string,
   fields: Partial<Pick<InboxItem, 'title' | 'item_type' | 'due_at' | 'next_review_at' | 'status'>>,
 ) {
-  return run(supabase.from('items').update({ ...fields, updated_at: now() }).eq('id', id))
+  // Uma data de revisão escolhida por ti deixa de ser recalculada automaticamente
+  const extra = 'next_review_at' in fields ? { review_rule: 'manual' } : {}
+  return run(supabase.from('items').update({ ...fields, ...extra, updated_at: now() }).eq('id', id))
+}
+
+// Data de revisão automática: fecho do dia do último evento ligado, ou domingo (ver migração 015)
+export function recomputeReview(itemId: string) {
+  return run(supabase.rpc('recompute_item_review', { p_item_id: itemId }))
+}
+
+// Volta a deixar o sistema decidir a data de revisão (pelos eventos ou domingo)
+export async function autoReview(itemId: string) {
+  await run(supabase.from('items').update({ review_rule: 'weekly' }).eq('id', itemId))
+  await recomputeReview(itemId)
 }
 
 // ---------- Ligações ----------
@@ -43,18 +56,20 @@ const LINK: Record<LinkKind, { table: string; col: string; extra?: Record<string
   event: { table: 'event_items', col: 'event_id', extra: { link_source: 'user' } },
 }
 
-export function addLink(kind: LinkKind, itemId: string, entityId: string) {
+export async function addLink(kind: LinkKind, itemId: string, entityId: string) {
   const { table, col, extra } = LINK[kind]
-  return run(
+  await run(
     supabase
       .from(table)
       .upsert({ item_id: itemId, [col]: entityId, ...extra }, { onConflict: `item_id,${col}`, ignoreDuplicates: true }),
   )
+  if (kind === 'event') await recomputeReview(itemId) // revisão acompanha os eventos
 }
 
-export function removeLink(kind: LinkKind, itemId: string, entityId: string) {
+export async function removeLink(kind: LinkKind, itemId: string, entityId: string) {
   const { table, col } = LINK[kind]
-  return run(supabase.from(table).delete().eq('item_id', itemId).eq(col, entityId))
+  await run(supabase.from(table).delete().eq('item_id', itemId).eq(col, entityId))
+  if (kind === 'event') await recomputeReview(itemId)
 }
 
 export async function addNewTag(itemId: string, name: string) {
@@ -71,15 +86,17 @@ export async function addNewTag(itemId: string, name: string) {
 
 // ---------- Âmbito ("em todos os treinos até…") ----------
 
-export function addScope(
+export async function addScope(
   itemId: string,
   scope: { event_type: string | null; group_id: string | null; valid_until: string | null },
 ) {
-  return run(supabase.from('item_scopes').insert({ item_id: itemId, ...scope, source: 'user' }))
+  await run(supabase.from('item_scopes').insert({ item_id: itemId, ...scope, source: 'user' }))
+  await recomputeReview(itemId) // regra para vários eventos → revisão semanal
 }
 
-export function removeScope(scopeId: string) {
-  return run(supabase.from('item_scopes').delete().eq('id', scopeId))
+export async function removeScope(scopeId: string, itemId: string) {
+  await run(supabase.from('item_scopes').delete().eq('id', scopeId))
+  await recomputeReview(itemId)
 }
 
 // ---------- Revisões ----------
@@ -87,7 +104,14 @@ export function removeScope(scopeId: string) {
 export type ReviewResult = 'Maintain' | 'Update' | 'Complete' | 'Archive' | 'ReviewLater'
 
 // Regista a decisão no histórico (tabela reviews) e atualiza o estado atual do item.
-export async function recordReview(itemId: string, result: ReviewResult, notes: string, nextReviewAt: string | null) {
+// rule: de onde vem a próxima data (weekly = domingo, manual = dia escolhido)
+export async function recordReview(
+  itemId: string,
+  result: ReviewResult,
+  notes: string,
+  nextReviewAt: string | null,
+  rule: 'weekly' | 'manual' | 'event' = 'manual',
+) {
   const closing = result === 'Complete' || result === 'Archive'
   const next = closing ? null : nextReviewAt
 
@@ -102,7 +126,7 @@ export async function recordReview(itemId: string, result: ReviewResult, notes: 
     }),
   )
 
-  const fields: Record<string, unknown> = { next_review_at: next, updated_at: now() }
+  const fields: Record<string, unknown> = { next_review_at: next, review_rule: rule, carry_overs: 0, updated_at: now() }
   if (result === 'Complete') fields.status = 'Completed'
   if (result === 'Archive') fields.status = 'Archived'
   await run(supabase.from('items').update(fields).eq('id', itemId))
@@ -114,6 +138,27 @@ export async function recordReview(itemId: string, result: ReviewResult, notes: 
       supabase.from('item_scopes').update({ valid_until: t }).eq('item_id', itemId).or(`valid_until.is.null,valid_until.gt.${t}`),
     )
   }
+}
+
+// Na revisão: associar o item a próximo(s) evento(s) → passa a ser revisto no dia do último deles
+export async function reviewToEvents(itemId: string, eventIds: string[], eventLabels: string[], notes: string) {
+  await run(
+    supabase.from('event_items').upsert(
+      eventIds.map((event_id) => ({ item_id: itemId, event_id, link_source: 'user' })),
+      { onConflict: 'event_id,item_id', ignoreDuplicates: true },
+    ),
+  )
+  await run(
+    supabase.from('reviews').insert({
+      item_id: itemId,
+      review_type: 'Custom',
+      review_date: now(),
+      result: 'Update',
+      notes: [notes.trim(), `Associado a: ${eventLabels.join(', ')}`].filter(Boolean).join(' — '),
+    }),
+  )
+  await run(supabase.from('items').update({ review_rule: 'event', carry_overs: 0, updated_at: now() }).eq('id', itemId))
+  await recomputeReview(itemId)
 }
 
 // ---------- Menções por resolver ----------

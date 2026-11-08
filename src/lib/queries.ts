@@ -4,7 +4,7 @@ import type { Refs } from './types'
 // Campos de um item com todas as ligações (usado na Inbox e na lista de Itens)
 export const ITEM_SELECT = `
   id, title, description, item_type, status, classification_status, category, priority, source,
-  due_at, occurred_at, next_review_at, created_at, ai_interpretation,
+  due_at, occurred_at, next_review_at, review_rule, carry_overs, created_at, ai_interpretation,
   item_scopes ( id, event_type, group_id, valid_until, groups ( id, name ) ),
   item_people ( people ( id, name ) ),
   item_groups ( groups ( id, name ) ),

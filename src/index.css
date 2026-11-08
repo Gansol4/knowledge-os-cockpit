@@ -141,4 +141,11 @@ textarea {
 .ptype-Family { background: #fde8ef; color: #a3245a; }
 .ptype-Contact { background: #fff0e0; color: #a35a00; }
 
+.link-title {
+  border: none; background: none; padding: 0; min-height: 0; text-align: left;
+  font: inherit; font-weight: 600; color: var(--text); cursor: pointer;
+}
+.link-title:hover { color: var(--accent); }
+.event-pick { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+
 .actions { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
