@@ -4,8 +4,9 @@ import Inbox from './Inbox'
 import Review from './Review'
 import Items from './Items'
 import People from './People'
+import Agenda from './Agenda'
 
-type Tab = 'inbox' | 'review' | 'items' | 'people'
+type Tab = 'agenda' | 'inbox' | 'review' | 'items' | 'people'
 
 export default function Shell({ email }: { email: string }) {
   const [tab, setTab] = useState<Tab>('inbox')
@@ -39,6 +40,9 @@ export default function Shell({ email }: { email: string }) {
       </header>
 
       <nav className="tabs">
+        <button className={tab === 'agenda' ? 'active' : ''} onClick={() => setTab('agenda')}>
+          Agenda
+        </button>
         <button className={tab === 'inbox' ? 'active' : ''} onClick={() => setTab('inbox')}>
           Inbox {badge(counts.inbox)}
         </button>
@@ -57,6 +61,7 @@ export default function Shell({ email }: { email: string }) {
       {tab === 'review' && <Review onCount={setReviewCount} />}
       {tab === 'items' && <Items />}
       {tab === 'people' && <People />}
+      {tab === 'agenda' && <Agenda />}
     </div>
   )
 }
