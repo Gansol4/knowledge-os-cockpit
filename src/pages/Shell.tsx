@@ -3,8 +3,9 @@ import { supabase } from '../lib/supabase'
 import Inbox from './Inbox'
 import Review from './Review'
 import Items from './Items'
+import People from './People'
 
-type Tab = 'inbox' | 'review' | 'items'
+type Tab = 'inbox' | 'review' | 'items' | 'people'
 
 export default function Shell({ email }: { email: string }) {
   const [tab, setTab] = useState<Tab>('inbox')
@@ -47,11 +48,15 @@ export default function Shell({ email }: { email: string }) {
         <button className={tab === 'items' ? 'active' : ''} onClick={() => setTab('items')}>
           Itens
         </button>
+        <button className={tab === 'people' ? 'active' : ''} onClick={() => setTab('people')}>
+          Pessoas
+        </button>
       </nav>
 
       {tab === 'inbox' && <Inbox onCount={setInboxCount} />}
       {tab === 'review' && <Review onCount={setReviewCount} />}
       {tab === 'items' && <Items />}
+      {tab === 'people' && <People />}
     </div>
   )
 }
