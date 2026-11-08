@@ -164,7 +164,7 @@ export default function InboxCard({ item, refs, onChanged, mode = 'inbox', start
           refs={refs}
           onLink={(id) => act(() => A.resolveMention(m, item.id, id, refs))}
           onCreatePerson={(p) => act(() => A.createPersonFromMention(m, item.id, p))}
-          onIgnore={() => act(() => A.ignoreMention(m))}
+          onIgnore={() => act(() => A.ignoreMention(m, item.id))}
         />
       ))}
 

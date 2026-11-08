@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPerson, listPeople, type PersonRow } from '../lib/people'
 import { loadRefs } from '../lib/queries'
+import { resolvePersonMentions } from '../lib/actions'
 import { PERSON_TYPES, type Refs } from '../lib/types'
 import PersonCard from '../components/PersonCard'
 
@@ -123,6 +124,7 @@ function NewPerson(props: { refs: Refs; onCancel: () => void; onCreated: (id: st
     setError(null)
     try {
       const id = await createPerson({ name, person_type: personType, main_context_id: contextId })
+      await resolvePersonMentions(id) // registos pendentes que falavam desta pessoa
       props.onCreated(id)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))

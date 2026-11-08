@@ -142,6 +142,19 @@ export async function resolveMention(m: Mention, itemId: string, entityId: strin
   await run(
     supabase.from('item_mentions').update({ status: 'resolved', resolved_entity_id: entityId }).eq('id', m.id),
   )
+  // A alcunha nova pode resolver outros registos pendentes; e este fica validado se já não faltar nada
+  if (m.entity_kind === 'person') await resolvePersonMentions(entityId)
+  await refreshValidation(itemId)
+}
+
+// Registos pendentes que referiam esta pessoa → ligados e, se não faltar nada, validados
+export async function resolvePersonMentions(personId: string): Promise<number> {
+  const data = await run(supabase.rpc('resolve_person_mentions', { p_person_id: personId }))
+  return Number(data ?? 0)
+}
+
+export function refreshValidation(itemId: string) {
+  return run(supabase.rpc('refresh_item_validation', { p_item_id: itemId }))
 }
 
 export async function createPersonFromMention(
@@ -168,8 +181,11 @@ export async function createPersonFromMention(
   if (person.group_id) await run(supabase.from('group_people').insert({ group_id: person.group_id, person_id: id }))
   await addLink('person', itemId, id)
   await run(supabase.from('item_mentions').update({ status: 'resolved', resolved_entity_id: id }).eq('id', m.id))
+  await resolvePersonMentions(id)
+  await refreshValidation(itemId)
 }
 
-export function ignoreMention(m: Mention) {
-  return run(supabase.from('item_mentions').update({ status: 'ignored' }).eq('id', m.id))
+export async function ignoreMention(m: Mention, itemId: string) {
+  await run(supabase.from('item_mentions').update({ status: 'ignored' }).eq('id', m.id))
+  await refreshValidation(itemId)
 }

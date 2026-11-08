@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import * as P from '../lib/people'
+import { resolvePersonMentions } from '../lib/actions'
 import { fmtDate, fmtEvent } from '../lib/format'
 import { ITEM_STATUSES, ITEM_TYPES, PERSON_TYPES, type Refs } from '../lib/types'
 
@@ -73,6 +74,8 @@ export default function PersonCard({ person, refs, onChanged }: Props) {
         const clean = Object.fromEntries(Object.entries(athlete).map(([k, v]) => [k, v.trim() || null]))
         await P.saveAthlete(person.id, clean as Omit<P.AthleteRow, 'id' | 'person_id'>)
       }
+      // Nome ou alcunhas novas podem resolver registos pendentes
+      await resolvePersonMentions(person.id)
     })
   }
 
