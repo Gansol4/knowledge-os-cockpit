@@ -11,6 +11,7 @@ const RULE_LABEL: Record<string, string> = {
   event: 'pelo evento',
   weekly: 'revisão semanal',
   manual: 'data escolhida por ti',
+  daily: 'conhecimento: guardar ou arquivar',
   explicit: 'data pedida na mensagem',
 }
 
@@ -37,6 +38,8 @@ export default function ReviewCard({ item, refs, onChanged }: Props) {
     }
   }
 
+  // Conhecimento: concluir = fica guardado (pesquisável, na ficha das pessoas, nas tags)
+  const isKnowledge = item.item_type === 'Learning' || item.item_type === 'Reference'
   const people = item.item_people.map((x) => x.people).filter((x): x is Ref => !!x)
   const groups = item.item_groups.map((x) => x.groups).filter((x): x is Ref => !!x)
   const tags = item.item_tags.map((x) => x.tags).filter((x): x is Ref => !!x)
@@ -161,7 +164,7 @@ export default function ReviewCard({ item, refs, onChanged }: Props) {
 
       <footer className="row actions">
         <button className="primary" disabled={busy} onClick={() => act(() => A.recordReview(item.id, 'Complete', notes, null))}>
-          ✓ Concluir
+          {isKnowledge ? '✓ Guardar como conhecimento' : '✓ Concluir'}
         </button>
         <button disabled={busy} onClick={() => setMode(mode === 'events' ? 'none' : 'events')}>📅 Associar a evento…</button>
         <button disabled={busy} onClick={() => setMode(mode === 'day' ? 'none' : 'day')}>🗓 Outro dia…</button>
