@@ -22,6 +22,7 @@ export default function ScopeEditor({ scopes, groups, editing, onAdd, onRemove }
   const [type, setType] = useState('Training')
   const [groupId, setGroupId] = useState('')
   const [until, setUntil] = useState('')
+  const [adding, setAdding] = useState(false) // o formulário só aparece se pedires
 
   if (!editing && scopes.length === 0) return null
 
@@ -37,9 +38,16 @@ export default function ScopeEditor({ scopes, groups, editing, onAdd, onRemove }
             )}
           </span>
         ))}
-        {scopes.length === 0 && <span className="muted small">Só a este item (sem regra)</span>}
+        {scopes.length === 0 && (
+          <span className="muted small">Nenhuma regra: fica guardado como conhecimento e não aparece sozinho nos briefings.</span>
+        )}
       </div>
-      {editing && onAdd && (
+      {editing && onAdd && !adding && (
+        <button className="ghost small" onClick={() => setAdding(true)}>
+          + Fazer aparecer em vários eventos (ex: todos os treinos até…)
+        </button>
+      )}
+      {editing && onAdd && adding && (
         <div className="row">
           <select value={type} onChange={(e) => setType(e.target.value)}>
             {Object.entries(EVENT_TYPES).map(([v, l]) => (
@@ -64,10 +72,12 @@ export default function ScopeEditor({ scopes, groups, editing, onAdd, onRemove }
                 valid_until: until ? new Date(`${until}T23:59:59`).toISOString() : null,
               })
               setUntil('')
+              setAdding(false)
             }}
           >
-            + Regra
+            Criar regra
           </button>
+          <button className="ghost" onClick={() => setAdding(false)}>Cancelar</button>
         </div>
       )}
     </div>

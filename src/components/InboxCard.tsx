@@ -15,20 +15,28 @@ function DateField(props: {
   value: string | null
   editing: boolean
   onSave: (iso: string | null) => void
+  clearLabel?: string // botão para tirar a data (ex: "Sem revisão")
 }) {
   if (!props.value && !props.editing) return null
   return (
     <div className="links">
       <span className="links-label">{props.label}</span>
       {props.editing ? (
-        <input
-          type="datetime-local"
-          defaultValue={toLocalInput(props.value)}
-          onBlur={(e) => {
-            const iso = fromLocalInput(e.target.value)
-            if (iso !== props.value) props.onSave(iso)
-          }}
-        />
+        <div className="row">
+          <input
+            key={props.value ?? 'vazio'}
+            type="datetime-local"
+            defaultValue={toLocalInput(props.value)}
+            onBlur={(e) => {
+              const iso = fromLocalInput(e.target.value)
+              if (iso !== props.value) props.onSave(iso)
+            }}
+          />
+          {props.clearLabel && props.value && (
+            <button className="ghost small" onClick={() => props.onSave(null)}>{props.clearLabel}</button>
+          )}
+          {props.clearLabel && !props.value && <span className="muted small">Não volta às revisões</span>}
+        </div>
       ) : (
         <span>{fmtDateTime(props.value)}</span>
       )}
@@ -154,6 +162,7 @@ export default function InboxCard({ item, refs, onChanged, mode = 'inbox', start
         label="Próxima revisão"
         value={item.next_review_at}
         editing={editing}
+        clearLabel="Sem revisão"
         onSave={(iso) => act(() => A.updateItem(item.id, { next_review_at: iso }))}
       />
 
