@@ -2,14 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { EVENT_TYPES } from '../lib/types'
 import BriefingView from '../components/BriefingView'
+import AlertsPanel from '../components/AlertsPanel'
 
 type Ev = { id: string; title: string; start_at: string; end_at: string | null; all_day: boolean; event_type: string; status: string }
 
 const dayHeader = new Intl.DateTimeFormat('pt-PT', { weekday: 'long', day: '2-digit', month: '2-digit' })
 const hour = new Intl.DateTimeFormat('pt-PT', { hour: '2-digit', minute: '2-digit' })
 
-// Agenda: próximos eventos; clicar num abre o briefing
-export default function Agenda() {
+// Agenda: alertas abertos no topo; próximos eventos; clicar num abre o briefing
+export default function Agenda({ onAlerts }: { onAlerts?: (n: number) => void }) {
   const [events, setEvents] = useState<Ev[] | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [days, setDays] = useState(14)
@@ -60,6 +61,7 @@ export default function Agenda() {
           <button onClick={load}>↻</button>
         </div>
       </div>
+      <AlertsPanel onCount={onAlerts} />
       {error && <p className="error">{error}</p>}
       {events && events.length === 0 && <p className="empty">Sem eventos neste período.</p>}
 
