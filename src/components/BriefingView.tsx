@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { fmtDate, fmtEvent } from '../lib/format'
-import { ITEM_STATUSES, ITEM_TYPES, PERSON_TYPES } from '../lib/types'
+import { ITEM_STATUSES, ITEM_TYPES, PERSON_TYPES, TREND_LABELS } from '../lib/types'
 
 type Participant = {
   id: string
@@ -11,6 +11,8 @@ type Participant = {
   position: string | null
   restrictions: string | null
   health_recent: number
+  alerts?: string[]
+  open_cases?: { title: string; days_open: number; updates: number; last_update: { at: string; trend: string; text: string } | null }[]
   recent: { id: string; title: string; type: string; category: string | null; status: string; created_at: string }[]
 }
 
@@ -38,7 +40,9 @@ export default function BriefingView({ eventId }: { eventId: string }) {
   if (error) return <p className="error">{error}</p>
   if (!data) return <p className="muted small">A preparar o briefing…</p>
 
-  const alerts = data.participants.filter((p) => p.restrictions || p.health_recent >= 2)
+  const alerts = data.participants.filter(
+    (p) => p.restrictions || p.health_recent >= 2 || (p.alerts?.length ?? 0) > 0 || (p.open_cases?.length ?? 0) > 0,
+  )
   const withNews = data.participants.filter((p) => p.recent.length > 0)
   const quiet = data.participants.filter((p) => p.recent.length === 0)
 
@@ -62,6 +66,13 @@ export default function BriefingView({ eventId }: { eventId: string }) {
               <b>{p.name}</b>
               {p.restrictions ? ` — restrições: ${p.restrictions}` : ''}
               {p.health_recent >= 2 ? ` — ${p.health_recent} registos de saúde nos últimos 10 dias` : ''}
+              {(p.alerts ?? []).map((a, i) => <div key={`a${i}`}>🔴 {a}</div>)}
+              {(p.open_cases ?? []).map((c, i) => (
+                <div key={`c${i}`}>
+                  🩺 {c.title} · aberto há {c.days_open} {c.days_open === 1 ? 'dia' : 'dias'}
+                  {c.last_update ? ` · ${TREND_LABELS[c.last_update.trend] ?? c.last_update.trend} (${fmtDate(c.last_update.at)}): ${c.last_update.text}` : ''}
+                </div>
+              ))}
             </div>
           ))}
         </section>
