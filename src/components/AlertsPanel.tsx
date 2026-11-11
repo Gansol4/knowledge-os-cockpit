@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { fmtDateTime } from '../lib/format'
+import { recordReview } from '../lib/actions'
 
-type Alert = { id: string; created_at: string; updated_at: string; alert_type: string; severity: string; title: string; status: string }
+type Alert = {
+  id: string; created_at: string; updated_at: string; alert_type: string; severity: string; title: string; status: string
+  details: { item_ids?: string[] } | null
+}
 
 const TYPE_LABEL: Record<string, string> = {
   athlete_recurrence: 'Recorrência',
@@ -22,7 +26,7 @@ export default function AlertsPanel({ onCount }: { onCount?: (n: number) => void
   const load = useCallback(async () => {
     const { data, error } = await supabase
       .from('alerts')
-      .select('id, created_at, updated_at, alert_type, severity, title, status')
+      .select('id, created_at, updated_at, alert_type, severity, title, status, details')
       .in('status', OPEN_ALERT_STATUSES)
       .order('severity')
       .order('updated_at', { ascending: false })
@@ -46,6 +50,18 @@ export default function AlertsPanel({ onCount }: { onCount?: (n: number) => void
     else load()
   }
 
+  // Recorrência resolvida ("já não sente"): conclui os registos do alerta → saem dos próximos briefings
+  async function resolveWithItems(a: Alert) {
+    try {
+      for (const id of a.details?.item_ids ?? []) {
+        await recordReview(id, 'Complete', 'Resolvido a partir do alerta', null)
+      }
+      await close(a.id, 'resolved')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    }
+  }
+
   if (error) return <p className="error">Alertas: {error}</p>
   if (!alerts || alerts.length === 0) return null
 
@@ -61,7 +77,17 @@ export default function AlertsPanel({ onCount }: { onCount?: (n: number) => void
             <span>{a.title}</span>
           </div>
           <div className="row">
-            <button className="small" onClick={() => close(a.id, 'resolved')}>✓ Resolvido</button>
+            {a.alert_type === 'athlete_recurrence' && (a.details?.item_ids?.length ?? 0) > 0 ? (
+              <button
+                className="small"
+                title="Conclui os registos deste alerta: deixam de aparecer nos briefings (o histórico fica)"
+                onClick={() => resolveWithItems(a)}
+              >
+                ✓ Já passou (concluir {a.details!.item_ids!.length} registos)
+              </button>
+            ) : (
+              <button className="small" onClick={() => close(a.id, 'resolved')}>✓ Resolvido</button>
+            )}
             <button className="ghost small" onClick={() => close(a.id, 'dismissed')}>Ignorar</button>
           </div>
         </div>
