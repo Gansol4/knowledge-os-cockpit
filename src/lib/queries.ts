@@ -10,7 +10,8 @@ export const ITEM_SELECT = `
   item_groups ( groups ( id, name ) ),
   item_tags ( tags ( id, name ) ),
   event_items ( events ( id, title, start_at ) ),
-  item_mentions ( id, entity_kind, mention_text, suggested_entity_id, status )
+  item_mentions ( id, entity_kind, mention_text, suggested_entity_id, status ),
+  item_updates ( id, created_at, content, trend )
 `
 
 // Listas de referência para os seletores (pessoas, grupos, tags, contextos, eventos próximos)

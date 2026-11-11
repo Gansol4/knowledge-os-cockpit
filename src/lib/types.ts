@@ -35,6 +35,7 @@ export type InboxItem = {
   item_mentions: Mention[]
   item_scopes: Scope[]
   reviews?: ReviewEntry[]
+  item_updates?: ItemUpdate[]
 }
 
 export const ITEM_STATUSES: Record<string, string> = {
@@ -107,4 +108,15 @@ export const KIND_LABEL: Record<Mention['entity_kind'], string> = {
   person: 'Pessoa',
   group: 'Grupo',
   event: 'Evento',
+}
+
+// Atualizações de um caso em acompanhamento ("continua com dor", "melhorou", "já passou")
+export type ItemUpdate = { id: string; created_at: string; content: string; trend: string }
+
+export const TREND_LABELS: Record<string, string> = {
+  same: '➖ mantém-se',
+  better: '📈 melhorou',
+  worse: '📉 piorou',
+  resolved: '✅ resolvido',
+  info: '📝 informação',
 }

@@ -13,6 +13,7 @@ const TYPE_LABEL: Record<string, string> = {
   athlete_silence: 'Sem registos',
   review_backlog: 'Revisões acumuladas',
   system_failure: 'Sistema',
+  case_persistent: 'Caso persistente',
 }
 
 export const OPEN_ALERT_STATUSES = ['new', 'sent', 'seen']
@@ -77,7 +78,7 @@ export default function AlertsPanel({ onCount }: { onCount?: (n: number) => void
             <span>{a.title}</span>
           </div>
           <div className="row">
-            {a.alert_type === 'athlete_recurrence' && (a.details?.item_ids?.length ?? 0) > 0 ? (
+            {['athlete_recurrence', 'case_persistent'].includes(a.alert_type) && (a.details?.item_ids?.length ?? 0) > 0 ? (
               <button
                 className="small"
                 title="Conclui os registos deste alerta: deixam de aparecer nos briefings (o histórico fica)"

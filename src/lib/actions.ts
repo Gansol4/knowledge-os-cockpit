@@ -110,7 +110,7 @@ export async function recordReview(
   result: ReviewResult,
   notes: string,
   nextReviewAt: string | null,
-  rule: 'weekly' | 'manual' | 'event' = 'manual',
+  rule: 'weekly' | 'manual' | 'event' | 'case' | 'daily' = 'manual',
 ) {
   const closing = result === 'Complete' || result === 'Archive'
   const next = closing ? null : nextReviewAt
@@ -233,4 +233,9 @@ export async function createPersonFromMention(
 export async function ignoreMention(m: Mention, itemId: string) {
   await run(supabase.from('item_mentions').update({ status: 'ignored' }).eq('id', m.id))
   await refreshValidation(itemId)
+}
+
+// Acrescenta uma atualização a um caso (o caso passa a ser revisto no fecho de cada dia)
+export async function addUpdate(itemId: string, content: string, trend: string) {
+  await run(supabase.from('item_updates').insert({ item_id: itemId, content, trend, source: 'Cockpit' }))
 }

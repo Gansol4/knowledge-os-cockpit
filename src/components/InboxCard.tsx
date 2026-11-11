@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import * as A from '../lib/actions'
 import { fmtDateTime, fmtEvent, fromLocalInput, toLocalInput } from '../lib/format'
-import { ITEM_STATUSES, ITEM_TYPES, REVIEW_RESULTS, type InboxItem, type Ref, type Refs } from '../lib/types'
+import { ITEM_STATUSES, ITEM_TYPES, REVIEW_RESULTS, TREND_LABELS, type InboxItem, type Ref, type Refs } from '../lib/types'
 import LinkEditor from './LinkEditor'
 import MentionResolver from './MentionResolver'
 import ScopeEditor from './ScopeEditor'
@@ -176,6 +176,19 @@ export default function InboxCard({ item, refs, onChanged, mode = 'inbox', start
           onIgnore={() => act(() => A.ignoreMention(m, item.id))}
         />
       ))}
+
+      {item.item_updates && item.item_updates.length > 0 && (
+        <div className="links">
+          <span className="links-label">Acompanhamento</span>
+          {[...item.item_updates]
+            .sort((a, b) => b.created_at.localeCompare(a.created_at))
+            .map((u) => (
+              <div key={u.id} className="small">
+                <b>{fmtDateTime(u.created_at)}</b> · {TREND_LABELS[u.trend] ?? u.trend} — {u.content}
+              </div>
+            ))}
+        </div>
+      )}
 
       {mode === 'item' && item.reviews && item.reviews.length > 0 && (
         <div className="links">
