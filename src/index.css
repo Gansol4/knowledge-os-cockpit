@@ -163,3 +163,31 @@ textarea {
   background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
 .alert-high { border-left: 4px solid #d93025; }
 .alert-main { display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px; }
+
+/* Diário: números, gráfico (paleta validada: azul/laranja, claro e escuro), tabela */
+:root { --s1: #2a78d6; --s2: #eb6834; --grid: #eceef2; }
+@media (prefers-color-scheme: dark) { :root { --s1: #3987e5; --s2: #d95926; --grid: #262d37; } }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.tile-label { font-size: 0.8rem; color: var(--muted); }
+.tile-value { font-size: 1.6rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart { position: relative; }
+.chart svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.chart .grid { stroke: var(--grid); stroke-width: 1; }
+.chart .axis { fill: var(--muted); font-size: 11px; }
+.chart .crosshair { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { stroke: var(--card); stroke-width: 2; }
+.chart .direct { font-size: 12px; fill: var(--text); }
+.chart .s1 .line { stroke: var(--s1); } .chart .s1 .dot { fill: var(--s1); }
+.chart .s2 .line { stroke: var(--s2); } .chart .s2 .dot { fill: var(--s2); }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 6px; }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; }
+.swatch.s1 { background: var(--s1); } .swatch.s2 { background: var(--s2); }
+.tooltip { margin-top: 6px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+table.data { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.data th, table.data td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+table.data th { color: var(--muted); font-weight: 500; }
+.item-row.static { cursor: default; }
+.item-row.static:hover { border-color: var(--line); }
