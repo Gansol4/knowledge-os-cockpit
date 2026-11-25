@@ -11,6 +11,7 @@ type Participant = {
   position: string | null
   restrictions: string | null
   health_recent: number
+  plan_today?: string | null
   alerts?: string[]
   open_cases?: { title: string; days_open: number; updates: number; last_update: { at: string; trend: string; text: string } | null }[]
   recent: { id: string; title: string; type: string; category: string | null; status: string; created_at: string }[]
@@ -19,11 +20,14 @@ type Participant = {
 type Briefing = {
   event: { id: string; title: string; type: string; start_at: string; end_at: string | null; all_day: boolean; location: string | null; status: string }
   groups: string[]
+  gym?: { session: string; slot: number | null; gd: string | null; confirmed: boolean } | null
   participants: Participant[]
   items: { id: string; title: string; type: string; status: string; due_at: string | null; link: 'direct' | 'scope'; description: string | null }[]
   goals: { id: string; title: string; status: string }[]
   pending_validation: number
 }
+
+const GYM_LABEL: Record<string, string> = { strength: 'STR', resilience: 'RES', 'speed-strength': 'Speed STR' }
 
 // Briefing de Evento (nota 25): o que preciso de saber para este evento?
 export default function BriefingView({ eventId }: { eventId: string }) {
@@ -57,6 +61,26 @@ export default function BriefingView({ eventId }: { eventId: string }) {
           {data.event.status === 'Cancelled' ? ' · CANCELADO' : ''}
         </p>
       </header>
+
+      {data.gym && (
+        <section className="b-section">
+          <h4>
+            🏋️ Ginásio: {GYM_LABEL[data.gym.session] ?? data.gym.session}
+            {data.gym.slot ? ` ${data.gym.slot === 1 ? '①' : '②'}` : ''}
+            {data.gym.gd ? ` · ${data.gym.gd}` : ''}
+            {!data.gym.confirmed && <span className="muted small"> · proposta por confirmar</span>}
+          </h4>
+          {data.participants.filter((p) => p.plan_today).length === 0 ? (
+            <p className="muted small">Sem planos em vigor desta sessão para quem participa.</p>
+          ) : (
+            <div className="chips">
+              {data.participants.filter((p) => p.plan_today).map((p) => (
+                <span key={p.id} className="chip">{p.name} → {p.plan_today!.replace(/ - .+$/, '')}</span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {alerts.length > 0 && (
         <section className="b-section alert">
