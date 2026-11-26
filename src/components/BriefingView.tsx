@@ -14,7 +14,10 @@ type Participant = {
   plan_today?: string | null
   plan_flags?: {
     concerns: string[]
-    exercises: { exercise: string; block: string | null; sets: string | null; reps: string | null; impact: string | null; validated: boolean; why: string[] }[]
+    exercises: {
+      exercise: string; block: string | null; sets: string | null; reps: string | null; impact: string | null
+      contraction?: string[]; validated: boolean; why: string[]; level?: 'green' | 'yellow' | 'red'
+    }[]
   } | null
   alerts?: string[]
   open_cases?: { title: string; days_open: number; updates: number; last_update: { at: string; trend: string; text: string } | null }[]
@@ -32,6 +35,8 @@ type Briefing = {
 }
 
 const GYM_LABEL: Record<string, string> = { strength: 'STR', resilience: 'RES', 'speed-strength': 'Speed STR' }
+// Avisos do plano: cor + emoji + texto (nunca só a cor)
+const LEVEL: Record<string, string> = { red: '🔴 impacto alto', yellow: '🟡 impacto médio', green: '🟢 impacto baixo' }
 
 // Briefing de Evento (nota 25): o que preciso de saber para este evento?
 export default function BriefingView({ eventId }: { eventId: string }) {
@@ -87,9 +92,13 @@ export default function BriefingView({ eventId }: { eventId: string }) {
             <div key={`f${p.id}`} className="mention small">
               <b>⚠️ {p.name}</b> ({p.plan_flags!.concerns.join(', ')}) — no {p.plan_today!.replace(/ - .+$/, '')}:
               {p.plan_flags!.exercises.map((e, i) => (
-                <div key={i}>
-                  • {e.exercise}{e.sets || e.reps ? ` (${[e.sets, e.reps].filter(Boolean).join(' × ')})` : ''} — {e.why.join('; ')}
-                  {!e.validated && <span className="muted"> · propriedades por validar</span>}
+                <div key={i} className={`flag flag-${e.level ?? 'yellow'}`}>
+                  <span className="flag-tag">{LEVEL[e.level ?? 'yellow']}</span>
+                  <span>
+                    {e.exercise}{e.sets || e.reps ? ` (${[e.sets, e.reps].filter(Boolean).join(' × ')})` : ''} — {e.why.join('; ')}
+                    {e.contraction?.length ? ` · ${e.contraction.join('/')}` : ''}
+                    {!e.validated && <span className="muted"> · por validar</span>}
+                  </span>
                 </div>
               ))}
             </div>

@@ -191,3 +191,12 @@ table.data th, table.data td { text-align: left; padding: 6px 8px; border-bottom
 table.data th { color: var(--muted); font-weight: 500; }
 .item-row.static { cursor: default; }
 .item-row.static:hover { border-color: var(--line); }
+
+/* Avisos do plano no briefing (impacto): faixa colorida à esquerda + emoji/texto */
+:root { --flag-red: #c62828; --flag-yellow: #b7791f; --flag-green: #2e7d32; }
+@media (prefers-color-scheme: dark) { :root { --flag-red: #ff6b6b; --flag-yellow: #f2b84b; --flag-green: #5cc26a; } }
+.flag { display: flex; gap: 8px; align-items: baseline; padding: 4px 0 4px 8px; margin: 4px 0; border-left: 3px solid var(--line); }
+.flag-tag { white-space: nowrap; font-weight: 600; font-size: 0.8rem; }
+.flag-red { border-left-color: var(--flag-red); } .flag-red .flag-tag { color: var(--flag-red); }
+.flag-yellow { border-left-color: var(--flag-yellow); } .flag-yellow .flag-tag { color: var(--flag-yellow); }
+.flag-green { border-left-color: var(--flag-green); } .flag-green .flag-tag { color: var(--flag-green); }
