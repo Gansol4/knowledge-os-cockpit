@@ -12,6 +12,10 @@ type Participant = {
   restrictions: string | null
   health_recent: number
   plan_today?: string | null
+  plan_flags?: {
+    concerns: string[]
+    exercises: { exercise: string; block: string | null; sets: string | null; reps: string | null; impact: string | null; validated: boolean; why: string[] }[]
+  } | null
   alerts?: string[]
   open_cases?: { title: string; days_open: number; updates: number; last_update: { at: string; trend: string; text: string } | null }[]
   recent: { id: string; title: string; type: string; category: string | null; status: string; created_at: string }[]
@@ -79,6 +83,17 @@ export default function BriefingView({ eventId }: { eventId: string }) {
               ))}
             </div>
           )}
+          {data.participants.filter((p) => p.plan_flags?.exercises?.length).map((p) => (
+            <div key={`f${p.id}`} className="mention small">
+              <b>⚠️ {p.name}</b> ({p.plan_flags!.concerns.join(', ')}) — no {p.plan_today!.replace(/ - .+$/, '')}:
+              {p.plan_flags!.exercises.map((e, i) => (
+                <div key={i}>
+                  • {e.exercise}{e.sets || e.reps ? ` (${[e.sets, e.reps].filter(Boolean).join(' × ')})` : ''} — {e.why.join('; ')}
+                  {!e.validated && <span className="muted"> · propriedades por validar</span>}
+                </div>
+              ))}
+            </div>
+          ))}
         </section>
       )}
 
